@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel - Thinkathon</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="admin-container">
+
+  <header class="admin-header">
+    <h2>Thinkathon - Admin Panel</h2>
+    <button class="btn danger-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <!-- Add Category -->
+  <div class="section">
+    <h3>Add New Category</h3>
+    <input type="text" id="newCategory" placeholder="Enter category name">
+    <button class="btn primary-btn" onclick="addCategory()">Add Category</button>
+  </div>
+
+  <!-- Select Category -->
+  <div class="section">
+    <h3>Select Category</h3>
+    <select id="categorySelect"></select>
+  </div>
+
+  <!-- Add / Edit Question -->
+  <div class="section">
+    <h3>Add / Edit Question</h3>
+
+    <textarea id="question" placeholder="Enter question"></textarea>
+
+    <input type="text" id="optA" placeholder="Option A">
+    <input type="text" id="optB" placeholder="Option B">
+    <input type="text" id="optC" placeholder="Option C">
+    <input type="text" id="optD" placeholder="Option D">
+
+    <select id="correct">
+      <option value="">Select Correct Answer</option>
+      <option value="A">Option A</option>
+      <option value="B">Option B</option>
+      <option value="C">Option C</option>
+      <option value="D">Option D</option>
+    </select>
+
+    <select id="difficulty">
+      <option value="">Select Difficulty</option>
+      <option value="Easy">Easy</option>
+      <option value="Moderate">Moderate</option>
+      <option value="Tough">Tough</option>
+    </select>
+
+    <button class="btn primary-btn" onclick="saveQuestion()">Save Question</button>
+  </div>
+
+  <!-- Questions List -->
+  <div class="section">
+    <h3>Questions List</h3>
+
+    <table border="1">
+      <thead>
+        <tr>
+          <th>No</th>
+          <th>Category</th>
+          <th>Question</th>
+          <th>Options</th>
+          <th>Difficulty</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="questionTable"></tbody>
+    </table>
+  </div>
+
+</div>
+
+<script>
+
+let editId = null;
+
+// ================= LOAD CATEGORIES =================
+window.onload = function () {
+  loadCategories();
+};
+
+function loadCategories() {
+  fetch("http://localhost:3000/categories")
+    .then(res => res.json())
+    .then(data => {
+
+      const select = document.getElementById("categorySelect");
+      select.innerHTML = "";
+
+      data.forEach(cat => {
+        const option = document.createElement("option");
+        option.value = cat.name;
+        option.textContent = cat.name;
+        select.appendChild(option);
+      });
+
+      loadQuestions(); // load all questions
+    });
+}
+
+// ================= ADD CATEGORY =================
+function addCategory() {
+  const name = document.getElementById("newCategory").value.trim();
+
+  if (!name) {
+    alert("Enter category name");
+    return;
+  }
+
+  fetch("http://localhost:3000/add-category", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({ name })
+  })
+  .then(res => res.json())
+  .then(() => {
+    document.getElementById("newCategory").value = "";
+    loadCategories();
+  });
+}
+
+// ================= LOAD QUESTIONS (FIXED) =================
+function loadQuestions() {
+
+  fetch("http://localhost:3000/all-questions")
+    .then(res => res.json())
+    .then(data => {
+
+      const table = document.getElementById("questionTable");
+      table.innerHTML = "";
+
+      data.forEach((q, index) => {
+
+        table.innerHTML += `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${q.category}</td>
+            <td>${q.question}</td>
+            <td>
+              A: ${q.optA || ""}<br>
+              B: ${q.optB || ""}<br>
+              C: ${q.optC || ""}<br>
+              D: ${q.optD || ""}
+            </td>
+            <td>${q.difficulty}</td>
+            <td>
+              <button onclick="editQuestion(${q.id})">Edit</button>
+              <button onclick="deleteQuestion(${q.id})">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+
+    });
+}
+
+// ================= EDIT QUESTION =================
+function editQuestion(id) {
+
+  fetch(`http://localhost:3000/question/${id}`)
+    .then(res => res.json())
+    .then(q => {
+
+      editId = q.id;
+
+      document.getElementById("question").value = q.question;
+      document.getElementById("optA").value = q.optA;
+      document.getElementById("optB").value = q.optB;
+      document.getElementById("optC").value = q.optC;
+      document.getElementById("optD").value = q.optD;
+      document.getElementById("correct").value = q.correct;
+      document.getElementById("difficulty").value = q.difficulty;
+
+    });
+}
+
+// ================= SAVE QUESTION =================
+function saveQuestion() {
+
+  const category = document.getElementById("categorySelect").value;
+
+  const question = document.getElementById("question").value;
+  const optA = document.getElementById("optA").value;
+  const optB = document.getElementById("optB").value;
+  const optC = document.getElementById("optC").value;
+  const optD = document.getElementById("optD").value;
+  const correct = document.getElementById("correct").value;
+  const difficulty = document.getElementById("difficulty").value;
+
+  if (!category || !question || !optA || !optB || !optC || !optD || !correct || !difficulty) {
+    alert("Fill all fields");
+    return;
+  }
+
+  const url = editId
+    ? "http://localhost:3000/update-question"
+    : "http://localhost:3000/add-question";
+
+  fetch(url, {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      id: editId,
+      category,
+      question,
+      optA,
+      optB,
+      optC,
+      optD,
+      correct,
+      difficulty
+    })
+  })
+  .then(res => res.json())
+  .then(() => {
+    clearForm();
+    loadQuestions();
+  });
+}
+
+// ================= DELETE =================
+function deleteQuestion(id) {
+
+  if (!confirm("Are you sure?")) return;
+
+  fetch(`http://localhost:3000/delete-question/${id}`, {
+    method: "DELETE"
+  })
+  .then(res => res.json())
+  .then(() => loadQuestions());
+}
+
+// ================= CLEAR =================
+function clearForm() {
+  editId = null;
+  document.getElementById("question").value = "";
+  document.getElementById("optA").value = "";
+  document.getElementById("optB").value = "";
+  document.getElementById("optC").value = "";
+  document.getElementById("optD").value = "";
+  document.getElementById("correct").value = "";
+  document.getElementById("difficulty").value = "";
+}
+
+// ================= LOGOUT =================
+function logout() {
+  window.location.href = "welcome.html";
+}
+
+</script>
+
+</body>
+</html>

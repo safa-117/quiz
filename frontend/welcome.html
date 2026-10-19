@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thinkathon</title>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    /* CENTER PAGE */
+    body {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    /* ENHANCED WHITE BOX */
+    .welcome-container {
+      text-align: center;
+      padding: 40px;
+      max-width: 500px;
+
+      background: rgba(255, 255, 255, 0.95); /* WHITE */
+      border-radius: 16px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+
+      backdrop-filter: blur(10px);
+    }
+
+    .main-title {
+      font-size: 40px;
+      font-weight: bold;
+      margin-bottom: 10px;
+      color: #1976d2;
+      text-shadow: 0 0 15px rgba(25,118,210,0.4);
+    }
+
+    .tagline {
+      font-size: 18px;
+      margin-bottom: 25px;
+      color: #333;
+    }
+
+    .nav-buttons .btn {
+      margin: 10px;
+      padding: 12px 20px;
+      font-size: 15px;
+    }
+
+    .nav-buttons .btn:hover {
+      transform: scale(1.08);
+    }
+
+    .welcome-container {
+      animation: fadeIn 1s ease-in;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="welcome-container">
+
+    <h1 class="main-title">🎯 Welcome to THINKATHON</h1>
+
+    <p class="tagline">
+      Test your skills • Challenge your mind • Compete to win
+    </p>
+
+    <div class="nav-buttons">
+      <a href="welcome.html" class="btn">Home</a>
+      <a href="register.html" class="btn">Register</a>
+      <a href="login.html" class="btn primary-btn">Login</a>
+    </div>
+
+  </div>
+
+</body>
+</html>

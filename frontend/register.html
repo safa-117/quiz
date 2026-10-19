@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Registration - Thinkathon</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="auth-page">
+
+  <div class="auth-container">
+
+    <h2>User Registration</h2>
+
+    <form id="registerForm">
+
+      <!-- Username -->
+      <div class="input-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" placeholder="Enter Username" required>
+      </div>
+
+      <!-- Password -->
+      <div class="input-group password-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" placeholder="Enter Password" required>
+        <span class="eye-icon" onclick="togglePassword('password', this)">🙈</span>
+      </div>
+
+      <!-- Confirm Password -->
+      <div class="input-group password-group">
+        <label for="confirmPassword">Confirm Password</label>
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required>
+        <span class="eye-icon" onclick="togglePassword('confirmPassword', this)">🙈</span>
+      </div>
+
+      <button type="submit" class="btn primary-btn">Register</button>
+
+    </form>
+
+    <p>
+      Already have an account?
+      <a href="login.html">Login here</a>
+    </p>
+
+  </div>
+
+  <script>
+    // Toggle password visibility
+    function togglePassword(inputId, icon) {
+      const input = document.getElementById(inputId);
+
+      if (input.type === "password") {
+        input.type = "text";
+        icon.textContent = "👁️";
+      } else {
+        input.type = "password";
+        icon.textContent = "🙈";
+      }
+    }
+
+    // Register form submission
+    document.getElementById("registerForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const confirmPassword = document.getElementById("confirmPassword").value.trim();
+
+      if (!username || !password || !confirmPassword) {
+        alert("Please fill all fields!");
+        return;
+      }
+
+      if (password !== confirmPassword) {
+        alert("Passwords do not match!");
+        return;
+      }
+
+      fetch("http://localhost:3000/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          window.location.replace("login.html");
+        } else {
+          alert("User already exists!");
+        }
+      })
+      .catch(err => {
+        console.error("Error:", err);
+        alert("Server error. Please try again.");
+      });
+
+    });
+  </script>
+
+</body>
+</html>

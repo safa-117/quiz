@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thinkathon Quiz</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="quiz-container">
+
+    <h2>Thinkathon Quiz</h2>
+    <p id="welcomeUser"></p>
+
+    <!-- Quiz Setup -->
+    <div id="quizSetup">
+
+      <label>Select Category</label>
+      <select id="categorySelect"></select>
+
+      <label>Select Difficulty</label>
+      <select id="difficultySelect">
+        <option value="">-- Select Difficulty --</option>
+        <option value="Easy">Easy</option>
+        <option value="Moderate">Moderate</option>
+        <option value="Tough">Tough</option>
+      </select>
+
+      <button class="btn primary-btn" onclick="startQuiz()">Start Quiz</button>
+
+    </div>
+
+    <!-- Quiz Area -->
+    <div id="quizArea" style="display:none;">
+
+      <h3 id="questionNo"></h3>
+      <p id="timer">Time Left: 30s</p>
+
+      <p id="questionText"></p>
+
+      <form id="optionsForm">
+        <label><input type="radio" name="option" value="A"> <span id="optA"></span></label><br>
+        <label><input type="radio" name="option" value="B"> <span id="optB"></span></label><br>
+        <label><input type="radio" name="option" value="C"> <span id="optC"></span></label><br>
+        <label><input type="radio" name="option" value="D"> <span id="optD"></span></label>
+      </form>
+
+      <button class="btn primary-btn" onclick="nextQuestion()">Next</button>
+
+    </div>
+
+  </div>
+
+<script>
+
+let filteredQuestions = [];
+let currentIndex = 0;
+let correctCount = 0;
+let attemptedCount = 0;
+let timer;
+let timeLeft = 30;
+
+// Welcome text
+document.getElementById("welcomeUser").innerText =
+  "Hello, " + (localStorage.getItem("loggedUser") || "User");
+
+// Load categories
+fetch("http://localhost:3000/categories")
+  .then(res => res.json())
+  .then(data => {
+    const select = document.getElementById("categorySelect");
+    select.innerHTML = '<option value="">-- Select Category --</option>';
+
+    data.forEach(cat => {
+      const option = document.createElement("option");
+      option.value = cat.name;
+      option.textContent = cat.name;
+      select.appendChild(option);
+    });
+  });
+
+// Start Quiz
+function startQuiz() {
+
+  const category = document.getElementById("categorySelect").value;
+  const difficulty = document.getElementById("difficultySelect").value;
+
+  if (!category || !difficulty) {
+    alert("Please select category and difficulty");
+    return;
+  }
+
+  fetch(`http://localhost:3000/questions?category=${category}&difficulty=${difficulty}`)
+    .then(res => res.json())
+    .then(data => {
+
+      console.log("API DATA:", data); // DEBUG
+
+      if (!data || data.length === 0) {
+        alert("No questions available");
+        return;
+      }
+
+      filteredQuestions = data;
+
+      currentIndex = 0;
+      correctCount = 0;
+      attemptedCount = 0;
+
+      document.getElementById("quizSetup").style.display = "none";
+      document.getElementById("quizArea").style.display = "block";
+
+      loadQuestion();
+    });
+}
+
+// Load Question
+function loadQuestion() {
+
+  clearInterval(timer);
+  timeLeft = 30;
+  startTimer();
+
+  const q = filteredQuestions[currentIndex];
+
+  console.log("CURRENT QUESTION:", q); // DEBUG
+
+  document.getElementById("questionNo").innerText =
+    "Question " + (currentIndex + 1);
+
+  document.getElementById("questionText").innerText =
+    q.question || "No question available";
+
+  // ✅ CORRECT FIX (IMPORTANT)
+  document.getElementById("optA").innerText = q.optA ? q.optA : "Option A missing";
+  document.getElementById("optB").innerText = q.optB ? q.optB : "Option B missing";
+  document.getElementById("optC").innerText = q.optC ? q.optC : "Option C missing";
+  document.getElementById("optD").innerText = q.optD ? q.optD : "Option D missing";
+
+  document.getElementById("optionsForm").reset();
+}
+
+// Timer
+function startTimer() {
+
+  document.getElementById("timer").innerText = "Time Left: 30s";
+
+  timer = setInterval(() => {
+    timeLeft--;
+
+    document.getElementById("timer").innerText =
+      "Time Left: " + timeLeft + "s";
+
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      nextQuestion();
+    }
+
+  }, 1000);
+}
+
+// Next Question
+function nextQuestion() {
+
+  clearInterval(timer);
+
+  const selected = document.querySelector('input[name="option"]:checked');
+
+  if (selected) {
+
+    attemptedCount++;
+
+    if (selected.value === filteredQuestions[currentIndex].correct) {
+      correctCount++;
+    }
+  }
+
+  currentIndex++;
+
+  if (currentIndex < filteredQuestions.length) {
+    loadQuestion();
+  } else {
+    finishQuiz();
+  }
+}
+
+// Finish Quiz
+function finishQuiz() {
+
+  const total = filteredQuestions.length;
+  const wrong = attemptedCount - correctCount;
+
+  fetch("http://localhost:3000/save-result", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: localStorage.getItem("loggedUser"),
+      category: document.getElementById("categorySelect").value,
+      difficulty: document.getElementById("difficultySelect").value,
+      total: total,
+      attempted: attemptedCount,
+      correct: correctCount,
+      wrong: wrong
+    })
+  })
+  .then(() => {
+    window.location.href = "result.html";
+  });
+}
+
+</script>
+
+</body>
+</html>

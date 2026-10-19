@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login - Thinkathon</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="auth-page">
+
+  <div class="auth-container">
+
+    <h2>Login</h2>
+
+    <!-- ROLE SELECTION (VERTICAL) -->
+    <div class="input-group">
+
+      <label style="display:block; margin-bottom:8px;">
+        <input type="radio" name="role" value="user" checked onchange="toggleRegister()">
+        User
+      </label>
+
+      <label style="display:block;">
+        <input type="radio" name="role" value="admin" onchange="toggleRegister()">
+        Admin
+      </label>
+
+    </div>
+
+    <form id="loginForm">
+
+      <!-- USERNAME -->
+      <div class="input-group">
+        <label>Username</label>
+        <input type="text" id="username" placeholder="Enter Username" required>
+      </div>
+
+      <!-- PASSWORD -->
+      <div class="input-group password-group">
+        <label>Password</label>
+        <input type="password" id="password" placeholder="Enter Password" required>
+        <span class="eye-icon" onclick="togglePassword()">🙈</span>
+      </div>
+
+      <button type="submit" class="btn primary-btn">Login</button>
+    </form>
+
+    <!-- REGISTER LINK -->
+    <p class="redirect-text" id="registerLink">
+      New user?
+      <a href="register.html">Register here</a>
+    </p>
+
+  </div>
+
+  <script>
+
+    function toggleRegister() {
+      const selectedRole = document.querySelector('input[name="role"]:checked').value;
+      const registerLink = document.getElementById("registerLink");
+
+      registerLink.style.display = (selectedRole === "admin") ? "none" : "block";
+    }
+
+    function togglePassword() {
+      const input = document.getElementById("password");
+      const icon = document.querySelector(".eye-icon");
+
+      if (input.type === "password") {
+        input.type = "text";
+        icon.textContent = "👁️";
+      } else {
+        input.type = "password";
+        icon.textContent = "🙈";
+      }
+    }
+
+    document.getElementById("loginForm").addEventListener("submit", function(e) {
+      e.preventDefault();
+
+      const username = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const role = document.querySelector('input[name="role"]:checked').value;
+
+      fetch("http://localhost:3000/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ username, password, role })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+
+          localStorage.setItem("loggedUser", data.username);
+          localStorage.setItem("role", data.role);
+
+          if (data.role === "admin") {
+            window.location.href = "admin.html";
+          } else {
+            window.location.href = "quiz.html";
+          }
+
+        } else {
+          alert("Invalid credentials");
+        }
+      })
+      .catch(err => {
+        console.error("Login error:", err);
+        alert("Server error");
+      });
+
+    });
+
+  </script>
+
+</body>
+</html>

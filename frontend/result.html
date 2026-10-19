@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Quiz Result - Thinkathon</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="result-container">
+
+<h2>🎉 Quiz Result</h2>
+
+<div class="result-card">
+
+<p><strong>User Name:</strong> <span id="username"></span></p>
+<p><strong>Category:</strong> <span id="category"></span></p>
+<p><strong>Difficulty:</strong> <span id="difficulty"></span></p>
+
+<hr>
+
+<p><strong>Total Questions:</strong> <span id="total"></span></p>
+<p><strong>Attempted:</strong> <span id="attempted"></span></p>
+<p><strong>Correct:</strong> <span id="correct"></span></p>
+<p><strong>Wrong:</strong> <span id="wrong"></span></p>
+
+<p class="score-line">
+<strong>Score:</strong> <span id="score"></span>
+</p>
+
+<p class="percentage-line">
+<strong>Percentage:</strong> <span id="percentage"></span>%
+</p>
+
+</div>
+
+<div class="performance-message" id="performanceMessage"></div>
+
+<button class="btn primary-btn" onclick="goHome()">Go to Home</button>
+
+</div>
+
+
+<script>
+
+// ===============================
+// FETCH LAST RESULT
+// ===============================
+fetch("http://localhost:3000/get-last-result")
+.then(res => res.json())
+.then(data => {
+
+  if (!data) {
+    alert("No result found.");
+    return;
+  }
+
+  document.getElementById("username").innerText = data.username;
+  document.getElementById("category").innerText = data.category;
+  document.getElementById("difficulty").innerText = data.difficulty;
+
+  document.getElementById("total").innerText = data.total;
+  document.getElementById("attempted").innerText = data.attempted;
+  document.getElementById("correct").innerText = data.correct;
+  document.getElementById("wrong").innerText = data.wrong;
+
+  // Score
+  document.getElementById("score").innerText =
+    data.correct + " / " + data.total;
+
+  // Percentage
+  const percentage =
+    ((data.correct / data.total) * 100).toFixed(1);
+
+  document.getElementById("percentage").innerText = percentage;
+
+  // ===============================
+  // PERFORMANCE MESSAGE
+  // ===============================
+  let message = "";
+
+  if (percentage >= 80) {
+    message = "🌟 Excellent performance! You have strong knowledge in " + data.category + ".";
+  }
+  else if (percentage >= 60) {
+    message = "👍 Good performance! Keep practicing to improve further.";
+  }
+  else if (percentage >= 40) {
+    message = "🙂 Average performance. A little more practice will help.";
+  }
+  else {
+    message = "📘 Needs improvement. Try revising the concepts again.";
+  }
+
+  document.getElementById("performanceMessage").innerText = message;
+
+})
+.catch(err => {
+
+  console.error("Error fetching result:", err);
+  alert("Unable to load result.");
+
+});
+
+
+// ===============================
+// GO HOME BUTTON
+// ===============================
+function goHome() {
+  window.location.href = "welcome.html";
+}
+
+</script>
+
+</body>
+</html>
